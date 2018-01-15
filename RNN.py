@@ -69,7 +69,7 @@ def get_simpleRNN_model(input_shape,time_steps):
 
 # Generating the Dataset
 time_step=100
-m=1000#Number of training example
+m=1#Number of training example
 X=[]
 Y=np.empty((m,1))
 
@@ -94,4 +94,4 @@ input_shape=(1,)
 model=get_simpleRNN_model(input_shape,time_step)
 model.compile(optimizer='adam',loss='mse',metrics=['accuracy'])
 #Dont keep the X and Y as same name as the argument of fit, otherwise unrecognized argument.
-model.fit(X,Y,epochs=200,batch_size=100)
+model.fit(X,Y,epochs=1000,batch_size=1)
