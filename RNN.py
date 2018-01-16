@@ -31,7 +31,7 @@ def simpleRNN_oneStep(input_shape,X_t,ht_prev,step_no):
 
     #Final Layer that will go to next time step.(Currently just passing one layer activation to next step)
     #activation used is 'relu' cuz the packet loss or other metric later will be positive
-    X=Dense(output_layer_dim,activation='relu',name='time'+str(step_no)+'passing')(X)
+    X=Dense(output_layer_dim,activation='relu',kernel_initializer=rnn_initializer,name='time'+str(step_no)+'passing')(X)
 
     return X
 
