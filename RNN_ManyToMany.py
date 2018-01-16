@@ -30,15 +30,16 @@ def multiOutputRNN_oneStep(X_t,ht_prev,time_step):
     rnn_initializer='glorot_uniform'  #our good ole Xavier init.
 
     #TUNABLE(could be added directly to hiddenlayer of here ^ see later versions)
-    X=Concatenate()([X_t,ht_prev])
+    #print("printing kalpana ",X_t.shape)
+    X=Concatenate()([ht_prev,X_t])
 
     for i,dim in enumerate(hidden_layer_dims):
-        X=Dense(dim,activation='relu',kernel_initializer=rnn_initializer,name='time-step '+str(time_step)+'hidden_'+str(i+1))(X)
+        X=Dense(dim,activation='relu',kernel_initializer=rnn_initializer,name='time-step_'+str(time_step)+'hidden_'+str(i+1))(X)
         X=BatchNormalization(axis=-1)(X)
 
     #Final Layer of this time-step. here this will be the output of this time along with input
     #to next time-step. Later some or all hidden units coudl be input to next time-step
-    X=Dense(output_layer_dim,activation='relu',kernel_initializer='rnn_initializer',name='time-step'+str(time-step)+'output')(X)
+    X=Dense(output_layer_dim,activation='relu',kernel_initializer=rnn_initializer,name='time-step'+str(time_step)+'output')(X)
 
     return X #returning the output of this time-step.
 
@@ -60,19 +61,21 @@ def get_multiOutputRNN_model(input_shape,time_steps):
         #X_all possible dimesion is (None,time_steps,input_dim of each time-step).None is aoutomatically taken by Keras.
     X_all=Input(shape=input_shape,dtype=tf.float32,name='X_all')
         #the inital pre-conditiong on the sequence.(currently of shape=1 like outputs of each time-step)
-    h_initial=Input(shape=(1,),dtype=float32,name='ho')
+    h_initial=Input(shape=(1,),dtype=tf.float32,name='ho')
         #for final inking in the model as input and output.
     X_inputs=[h_initial,X_all]
-    Y_outputs=[]
+    Y_outputs=K.get_variable((None,time_steps,1),dtype=tf.float32)#now output is also in one big Tensor.(its better than  having a list,unnecessory mess)
 
     #Traversing through the time-step to create unfolded version of RNN
     for t in range(time_steps):
         if(t==0):
-            Y=multiOutputRNN_oneStep(X_all[t,:,:],h_initial,t+1)
-            Y_outputs.append(Y)
+            #print("Printing kalpana ",X_all.shape)
+            Y=multiOutputRNN_oneStep(X_all[:,t,:],h_initial,t+1)
+            print("printing kalpana",Y.shape)
+            Y_outputs[:,t,0]=Y
         else:
-            Y=multiOutputRNN_oneStep(X_all[t,:,:],Y,t+1)
-            Y_outputs.append(Y)
+            Y=multiOutputRNN_oneStep(X_all[t,:],Y,t+1)
+            Y_outputs[:,t,0]=Y
 
     #Now merging all the graph into one model.
     model=Model(inputs=X_inputs,outputs=Y_outputs,name='RNN-V1')
