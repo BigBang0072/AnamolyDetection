@@ -42,7 +42,7 @@ from RNN_ManyToMany import *
 def create_model_multi():
     #Generating the Dataset
     m=1000
-    time_steps=100
+    time_steps=10
     X=np.empty((m,time_steps,1))#dim of imput vector at each is 1-d vector
     Y=np.empty((m,time_steps,1))#now there is many-to-many relation
     h_initial=np.empty((m,1)) #only onr inital pre-conditioning per sequence
