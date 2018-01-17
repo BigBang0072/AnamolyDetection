@@ -26,7 +26,7 @@ def multiOutputRNN_oneStep(X_t,ht_prev,time_step):
          just at the input layer of next time-step.
     '''
     #TUNABLE
-    hidden_layer_dims=[10,]  #To be decided
+    hidden_layer_dims=[100,10]  #To be decided
     output_layer_dim=1
     rnn_initializer='glorot_uniform'  #our good ole Xavier init.
 
@@ -65,9 +65,7 @@ def get_multiOutputRNN_model(input_shape,time_steps):
         #the inital pre-conditiong on the sequence.(currently of shape=1 like outputs of each time-step)
     h_initial=Input(shape=(1,),dtype=tf.float32,name='ho')
         #for final inking in the model as input and output.
-    X_inputs=[]
-    X_inputs.append(h_initial)
-    X_inputs.append(X_all)
+    X_inputs=[h_initial,X_all]
     #Y_outputs=None #(will do in loop by concatenating)now output is also in one big Tensor.(its better than  having a list,unnecessory mess)
 
     #Traversing through the time-step to create unfolded version of RNN

@@ -4,6 +4,7 @@ import tensorflow as tf
 from keras.layers import Input,Dense,Activation
 from keras.layers import Dropout,BatchNormalization
 from keras.layers import Concatenate
+from keras.layers.core import Lambda
 from keras import optimizers
 from keras.models import Model
 import keras.backend as K
@@ -48,17 +49,17 @@ def get_simpleRNN_model(input_shape,time_steps):
     '''
     X_inputs=[]
     h_initial=Input(shape=(1,),dtype=tf.float32,name='h0')
-    X_inputs.append(h_initial)
-    for i in range(time_steps):
-        X_t=Input(input_shape,dtype='float32',name='Input_time'+str(i+1))
-        X_inputs.append(X_t)
+    X_all=Input(input_shape,dtype='float32',name='X_all')
+    X_inputs=[h_initial,X_all]
 
     #Traversing through the timestep to create the recurrent effect
-    for t,X_t in enumerate(X_inputs):
-        if(t==1):
-            X=simpleRNN_oneStep(input_shape,X_t,X_inputs[0],t)
+    for t in range(time_steps):
+        if(t==0):
+            X_t=Lambda(give_timestep_input,arguments={'t':t})(X_all)
+            X=simpleRNN_oneStep(input_shape,X_t,h_initial,t+1)
         elif(t>1):
-            X=simpleRNN_oneStep(input_shape,X_t,X,t)
+            X_t=Lambda(give_timestep_input,arguments={'t':t})(X_all)
+            X=simpleRNN_oneStep(input_shape,X_t,X,t+1)
 
     #This final time-step's NN's output is our prediction of the network parameters based on
     #previous "Referrent Time's  input"
@@ -69,3 +70,5 @@ def get_simpleRNN_model(input_shape,time_steps):
 
 def accuracy_metric(y_true,y_pred):
     return y_pred
+def give_timestep_input(x,t):
+    return x[:,t,:]
