@@ -95,14 +95,13 @@ def create_model_trueRNN():
     Y=np.empty((m,time_steps,1))#now there is many-to-many relation
 
     for i in range(m):
-        h_initial[i,0]=time_steps*(m-1)-1
         for j in range(time_steps):
             X[i,j,0]=time_steps*(m-1)+j
             Y[i,j,0]=time_steps*(m-1)+j+1
 
 
-    hidden_layer_dims=10 #fixed size in all the layer with memory to next time(cuz of this memory)(or we could give it as listOK but later)
-    total_mem_layer=1#change simultaneously here and function
+    hidden_layer_dims=20 #fixed size in all the layer with memory to next time(cuz of this memory)(or we could give it as listOK but later)
+    total_mem_layer=2#change simultaneously here and function
     h_initial=np.zeros((m,total_mem_layer,hidden_layer_dims)) #only onr inital pre-conditioning per sequence
 
 
@@ -125,7 +124,7 @@ def create_model_trueRNN():
     Y_outputs_test=Y_test
 
     input_shape=(time_steps,1)
-    model=get_multiOutputRNN_model(input_shape,time_steps)
+    model=RNN(input_shape,time_steps)
     #adam=optimizers.Adam(clipnorm=1.0)
     model.compile(optimizer='adam',loss='mean_absolute_error')
     print(model.summary())
