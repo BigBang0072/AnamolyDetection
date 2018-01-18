@@ -18,7 +18,7 @@ def simpleRNN_oneStep(input_shape,X_t,ht_prev,step_no):
     '''
     #Tunable(AK)
     #the internal normal feed forward dimension to create representation for next time step
-    hidden_layer_dims=[10,]    #To be decided
+    hidden_layer_dims=[100,]    #To be decided
     output_layer_dim=1          #To be decided
     rnn_initializer='glorot_uniform'
 

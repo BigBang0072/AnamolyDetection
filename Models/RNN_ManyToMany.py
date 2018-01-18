@@ -26,7 +26,7 @@ def multiOutputRNN_oneStep(X_t,ht_prev,time_step):
          just at the input layer of next time-step.
     '''
     #TUNABLE
-    hidden_layer_dims=[100,10]  #To be decided
+    hidden_layer_dims=[10,]  #To be decided
     output_layer_dim=1
     rnn_initializer='glorot_uniform'  #our good ole Xavier init.
 
