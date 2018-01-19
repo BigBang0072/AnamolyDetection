@@ -90,38 +90,47 @@ def create_model_multi():
 def create_model_trueRNN():
     #Generating the Dataset
     m=1000
-    time_steps=10
+    train_split=(m//4)*3
+    time_steps=5
     X=np.empty((m,time_steps,1))#dim of imput vector at each is 1-d vector
     Y=np.empty((m,time_steps,1))#now there is many-to-many relation
 
     for i in range(m):
         for j in range(time_steps):
-            X[i,j,0]=time_steps*(m-1)+j
-            Y[i,j,0]=time_steps*(m-1)+j+1
+            X[i,j,0]=time_steps*(i-1)+j
+            Y[i,j,0]=time_steps*(i-1)+j+1
 
 
     hidden_layer_dims=20 #fixed size in all the layer with memory to next time(cuz of this memory)(or we could give it as listOK but later)
     total_mem_layer=2#change simultaneously here and function
     h_initial=np.zeros((m,total_mem_layer,hidden_layer_dims)) #only onr inital pre-conditioning per sequence
 
-
+    # #printing the data set for Error check in data-set(if any)
+    # print('X_train ',X[:10,:,:])
+    # print('Y_train ',Y[:10,:,:])
+    # print('h_initial',h_initial[:10,:,:])
 
     permutation=list(np.random.permutation(m))
     X=X[permutation,:,:]
     Y=Y[permutation,:,:]
     h_initial=h_initial[permutation,:,:]
 
-    X_train=X[:700,:,:]
-    Y_train=Y[:700,:,:]
-    h_initial_train=h_initial[:700,:,:]
+    X_train=X[:train_split,:,:]
+    Y_train=Y[:train_split,:,:]
+    h_initial_train=h_initial[:train_split,:,:]
     X_inputs_train=[h_initial_train,X_train]
     Y_outputs_train=Y_train
 
-    X_test=X[700:-1,:,:]
-    Y_test=Y[700:-1,:,:]
-    h_output_test=h_initial[700:-1,:,:]
-    X_inputs_test=[h_output_test,X_test]
+    X_test=X[train_split:-1,:,:]
+    Y_test=Y[train_split:-1,:,:]
+    h_initial_test=h_initial[train_split:-1,:,:]
+    X_inputs_test=[h_initial_test,X_test]
     Y_outputs_test=Y_test
+
+    # #printing the data set for Error check in data-set(if any)
+    # print('X_train ',X[:10,:,:])
+    # print('Y_train ',Y[:10,:,:])
+    # print('h_initial',h_initial[:10,:,:])
 
     input_shape=(time_steps,1)
     model=RNN(input_shape,time_steps)
