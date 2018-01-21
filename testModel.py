@@ -8,15 +8,7 @@ sys.path.append('/home/abhinav/Desktop/AnamolyDetection/AnamolyDetection/Models'
 from RNN_ManyToMany import *
 from RNN import *
 from RNN_V2 import *
-
-def plot_training_losses(train_history):
-    loss=train_history.history['loss']
-    val_loss=train_history.history['val_loss']
-
-    plt.plot(loss)
-    plt.plot(val_loss)
-    plt.legend(['loss','val_loss'])
-    plt.show()
+from RNN_V3 import *
 
 def create_model_single():
     #Generating the Dataset
@@ -99,7 +91,7 @@ def create_model_trueRNN():
     #Generating the Dataset
     m=1000
     train_split=(m//4)*3
-    time_steps=3
+    time_steps=25
     X=np.empty((m,time_steps,1))#dim of imput vector at each is 1-d vector
     Y=np.empty((m,time_steps,1))#now there is many-to-many relation
 
@@ -146,11 +138,49 @@ def create_model_trueRNN():
     model.compile(optimizer='adam',loss='mse')
     print(model.summary())
 
-    train_history=model.fit(x=X_inputs_train,y=Y_outputs_train,epochs=10000,batch_size=m,validation_data=(X_inputs_test,Y_outputs_test))
+    train_history=model.fit(x=X_inputs_train,y=Y_outputs_train,epochs=5000,batch_size=m,validation_data=(X_inputs_test,Y_outputs_test))
     plot_training_losses(train_history)
 
     prediction=model.predict(X_inputs_test)
     plot_predictions(prediction,Y_outputs_test)
+
+def create_model_seqRNN():
+    #Generating the Dataset
+    m=1000
+    train_split=(m//4)*3
+    time_steps=25
+    X=np.empty((m,time_steps,1))#dim of imput vector at each is 1-d vector
+    Y=np.empty((m,time_steps,1))#now there is many-to-many relation
+
+    for i in range(m):
+        for j in range(time_steps):
+            X[i,j,0]=time_steps*(i-1)+j
+            Y[i,j,0]=time_steps*(i-1)+j+1
+
+
+    permutation=list(np.random.permutation(m))
+    X=X[permutation,:,:]
+    Y=Y[permutation,:,:]
+
+    X_train=X[:train_split,:,:]
+    Y_train=Y[:train_split,:,:]
+    Y_outputs_train=Y_train
+
+    X_test=X[train_split:-1,:,:]
+    Y_test=Y[train_split:-1,:,:]
+    Y_outputs_test=Y_test
+
+    input_shape=(time_steps,1)
+    model=seq_LSTM(time_steps)
+    #adam=optimizers.Adam(clipnorm=1.0)
+    model.compile(optimizer='adam',loss='mse')
+    print(model.summary())
+
+    train_history=model.fit(x=X_train,y=Y_train,epochs=5000,batch_size=m,validation_data=(X_test,Y_test))
+    plot_training_losses(train_history)
+
+    prediction=model.predict(X_test)
+    plot_predictions(prediction,Y_test)
 
 def plot_predictions(pred,actual):
     m=actual.shape[0]
@@ -161,4 +191,13 @@ def plot_predictions(pred,actual):
             plt.legend(['pred','actual'])
             plt.savefig(str(i)+'.png')
             plt.clf()
+def plot_training_losses(train_history):
+    loss=train_history.history['loss']
+    val_loss=train_history.history['val_loss']
+
+    plt.plot(loss)
+    plt.plot(val_loss)
+    plt.legend(['loss','val_loss'])
+    plt.show()
+
 create_model_trueRNN()
