@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 np.random.seed(1) #for having consistency while debugging
 
 sampling_rate=1 #in Hz(times per second)
@@ -8,6 +9,20 @@ end_date='2018-02-08T00:00:00' #end of the 7thday
 max_base_lim=0.5 #the maximum normal packet loss(as used in paper)
 num_links=5 #number of different source destination.
 #standard_dev_base=np.array([0.007,0.03,0.04,0.05,0.09])
+
+def plotTimeSeries(time_series):
+    '''Arguments:
+        time-series: this the generated time series at any point of processing
+    '''
+    links=time_series.shape[1]
+    for i in range(links):
+        plt.plot(time_series[:,i],label='link'+str(i))
+        plt.xlabel('time stamps')
+        plt.ylabel('Packet-Loss')
+        plt.ylim(0,1)
+    plt.legend()
+    #plt.savefig('base1.png')
+    plt.show()
 
 def simpleDataset(num_links,max_base_lim):
     '''Arguments:
@@ -48,19 +63,20 @@ def simpleDataset(num_links,max_base_lim):
             time_series[pos:pos+to,i]=np.random.normal(base_val[i],
                                         std_val*std_base[i],size=(to,)) #OK (to,) snapped
     plotTimeSeries(time_series)
+    return index,time_series
 
-def plotTimeSeries(time_series):
+def saveToCSV(num_links,index,time_series):
     '''Arguments:
-        time-series: this the generated time series at any point of processing
+        num_links: total number of different destination
+        index: for indexing the rows of data-frame with time
+        time_series: numpy array holding the time-series data for all links
     '''
-    links=time_series.shape[1]
-    for i in range(links):
-        plt.plot(time_series[:,i],label='link'+str(i))
-        plt.xlabel('time stamps')
-        plt.ylabel('Packet-Loss')
-        plt.ylim(0,1)
-    plt.legend()
-    #plt.savefig('base1.png')
-    plt.show()
+    col=[]
+    for i in range(num_links):
+        col.append('link'+str(i))
+    df=pd.DataFrame(data=time_series,index=index,columns=col)
+    df.to_csv('./../Data/time_series.csv')
+    #df.to_excel('./../Data/time_series.xlsx')
 
-simpleDataset(num_links,max_base_lim)
+index,time_series=simpleDataset(num_links,max_base_lim)
+saveToCSV(num_links,index,time_series)
