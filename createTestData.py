@@ -15,7 +15,7 @@ def simpleDataset(num_links,max_base_lim):
         max_base_lim: denote the base signal value on which the normal and anomalous
                         noise will be added.
     '''
-    #First generating the base signal. Later noise will be added with varying std and places
+            #First generating the base signal. Later noise will be added with varying std and places
     base_val=np.random.uniform(0.1,0.55,num_links);#Tunable
     std_base=np.random.uniform(0.00325,0.02,num_links);#Tunable
 
@@ -24,6 +24,29 @@ def simpleDataset(num_links,max_base_lim):
     timestamps=index.shape[0]
     #generating the time-series
     time_series=np.random.normal(base_val,std_base,size=(timestamps,num_links))
+    plotTimeSeries(time_series)
+
+            #Now as base signal is created we have to add noise to it
+    num_anomaly=3 #number of anomaly in each link
+    #select random index from the total timestamp(where to insert anomaly).
+    offset=15000 #here ~3000 timepoints means one hour(our max anomaly will last 4 hour so for safety)
+    anomaly_pos=np.random.randint(offset,timestamps-offset,
+                                    size=(num_anomaly,num_links))
+    #crete radom uniform minute of anomaly to be added.
+    #(max four hour and min 30 min) 4hour=4*60=240 min.
+    min_minutes_index=(30)*60 #here 60 is to convet to index which is sampled each second
+    max_minutes_index=(4*60)*60
+    anomaly_min=np.random.randint(min_minutes_index,max_minutes_index,
+                                        size=(num_anomaly,num_links))
+    #create the new noise and add at the selected pos above.
+    #this anomay wont be just a constant shif but overall normal dist with std of var-sigma(2-5)
+    for i in range(num_links):
+        for j in range(num_anomaly):
+            std_val=np.random.randint(2,6) # a random "scalar" bw 2 to 5
+            pos=anomaly_pos[j,i]
+            to=anomaly_min[j,i]
+            time_series[pos:pos+to,i]=np.random.normal(base_val[i],
+                                        std_val*std_base[i],size=(to,)) #OK (to,) snapped
     plotTimeSeries(time_series)
 
 def plotTimeSeries(time_series):
