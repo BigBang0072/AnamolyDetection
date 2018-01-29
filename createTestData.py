@@ -65,6 +65,43 @@ def simpleDataset(num_links,max_base_lim):
     plotTimeSeries(time_series)
     return index,time_series
 
+def correlatedDataset(num_links,max_base_lim):
+    '''Arguments:
+        num_links: total number of destination from the current source.
+        max_base_lim: the maximim base (normal without any anomaly) packet loss that is often seen in ral data.
+    '''
+        #FOR BASE SIGNAL(above wich noise will be overlayed later)
+    base_val=np.random.uniform(0.1,0.55,num_links)
+    std_base=np.random.uniform(0.00325,0.02,num_links)
+
+
+    #Creating the timestamps for indexing
+    index=np.arange(start_date,end_date,dtype='datetime64')
+    timestamps=index.shape[0]
+
+    #Now creating the actual data which is base-signal (i.e normal characteristic of the signal)
+    #Also few of the links will be correlated to reach other both in base signal and anomaly part.
+    #the correlation will be given by the co-variance matrix
+    covariance_matrix=np.array([[0,0,0,0,0],
+                                [0,0,0,0,0], #link 1 and 2 are correlated currently with co-variace=0.5
+                                [0,0,0,0,0],
+                                [0,0,0,0,0],
+                                [0,0,0,0,0]],dtype=np.float64)
+
+    for i in range(num_links):
+        covariance_matrix[i,i]=std_base[i] #putting the variance in the digonal
+    #Now finally getting multivariate random gaussian time series
+    print(base_val)
+    print(covariance_matrix)
+    time_series=np.random.multivariate_normal(base_val,covariance_matrix,
+                                                size=(timestamps))
+    # time_series=np.random.normal(base_val,std_base,size=(timestamps,num_links))
+    plotTimeSeries(time_series)
+    # print(time_series.shape)
+        #Now we have to add noise(anomaly) over this base signal
+
+    return time_series,index
+
 def saveToCSV(num_links,index,time_series):
     '''Arguments:
         num_links: total number of different destination
@@ -78,5 +115,5 @@ def saveToCSV(num_links,index,time_series):
     df.to_csv('./../Data/time_series.csv')
     #df.to_excel('./../Data/time_series.xlsx')
 
-index,time_series=simpleDataset(num_links,max_base_lim)
-saveToCSV(num_links,index,time_series)
+time_series,intdex=simpleDataset(num_links,max_base_lim)
+#saveToCSV(num_links,index,time_series)
