@@ -4,14 +4,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from simpleFF3001 import *
 
-sys.path.append('/home/abhinav/Desktop/AnamolyDetection/Data/time_series3001.csv')
 sys.path.append('/home/abhinav/Desktop/AnamolyDetection/AnamolyDetection/Models')
-filename='/home/abhinav/Desktop/AnamolyDetection/Data/time_series3001.csv'
+time_series_path='/home/abhinav/Desktop/AnamolyDetection/Data/time_series3001_10'
+filename=time_series_path+'.csv'
+metadata_path=time_series_path+'_metadata.npz'
+
 def createDataSet():
     df=pd.read_csv(filename)
     print('Printing Data Sample')
     print(df.head())
-    df=df['link0']
+    df=df['link3']
     print('just taking out first links data:')
     print(df.head())
     #print(type(df))
@@ -108,3 +110,23 @@ def plot_training_losses(train_history):
 
 plot_training_losses(train_history)
 plot_predictions(Y_test,prediction)
+
+def extractMetadata(metadata_path):
+    metadata=np.load(metadata_path)
+    anomaly_pos=metadata['anomaly_pos']
+    anomaly_min=metadata['anomaly_min']
+
+    return anomaly_pos,anomaly_min
+
+def plot_decision_boundary(time_series,input_time,output_time,model):
+    '''Arguments:
+        time_seires : the full time-series of the particular link/or all depend on model
+        input_time  : the posterior for predicting the next time-step
+        output_time : the anteroir time_stamp being predicted given the posterior
+        model       : the trained model to make the prediction on
+    '''
+
+    plt.plot(time_series[:]) #the case when only one link is there.
+    anomaly_pos,anomaly_min=extractMetadata(metadata_path)
+    gt_anomaly_loc=np.zeros((time_series.shape[0])) #the ground truth where anomaly is located
+    

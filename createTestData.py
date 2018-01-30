@@ -34,6 +34,10 @@ def simpleDataset(num_links,max_base_lim):
             #First generating the base signal. Later noise will be added with varying std and places
     base_val=np.random.uniform(0.1,0.55,num_links);#Tunable
     std_base=np.random.uniform(0.00325,0.02,num_links);#Tunable
+    metadata={} #for storing the useful attributes of data generated for use elsewhere
+    metadata['base_val']=base_val
+    metadata['std_base']=std_base
+
 
     #creating the timestamps for indexing later
     index=np.arange(start_date,end_date,dtype='datetime64')
@@ -56,6 +60,9 @@ def simpleDataset(num_links,max_base_lim):
     max_minutes_index=(max_anomaly_min)*60
     anomaly_min=np.random.randint(min_minutes_index,max_minutes_index,
                                         size=(num_anomaly,num_links))
+
+    metadata['anomaly_pos']=anomaly_pos
+    metadata['anomaly_min']=anomaly_min
     #create the new noise and add at the selected pos above.
     #this anomay wont be just a constant shif but overall normal dist with std of var-sigma(2-5)
     for i in range(num_links):
@@ -66,7 +73,7 @@ def simpleDataset(num_links,max_base_lim):
             time_series[pos:pos+to,i]=np.random.normal(base_val[i],
                                         std_val*std_base[i],size=(to,)) #OK (to,) snapped
     plotTimeSeries(time_series)
-    return index,time_series
+    return metadata,index,time_series
 
 def correlatedDataset(num_links,max_base_lim):
     '''Arguments:
@@ -105,7 +112,7 @@ def correlatedDataset(num_links,max_base_lim):
 
     return index,time_series
 
-def saveToCSV(num_links,index,time_series):
+def saveToCSV(num_links,metadata,index,time_series):
     '''Arguments:
         num_links: total number of different destination
         index: for indexing the rows of data-frame with time
@@ -115,8 +122,10 @@ def saveToCSV(num_links,index,time_series):
     for i in range(num_links):
         col.append('link'+str(i))
     df=pd.DataFrame(data=time_series,index=index,columns=col)
-    df.to_csv('./../Data/time_series3001.csv')
+    filename='./../Data/time_series3001_'+str(num_anomaly)
+    df.to_csv(filename+'.csv')
+    np.savez(filename+'_metadata',**metadata)
     #df.to_excel('./../Data/time_series.xlsx')
 
-index,time_series=simpleDataset(num_links,max_base_lim)
-saveToCSV(num_links,index,time_series)
+metadata,index,time_series=simpleDataset(num_links,max_base_lim)
+saveToCSV(num_links,metadata,index,time_series)
