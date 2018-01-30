@@ -8,6 +8,7 @@ start_date='2018-02-01T00:00:00'
 end_date='2018-02-08T00:00:00' #end of the 7thday
 max_base_lim=0.5 #the maximum normal packet loss(as used in paper)
 num_links=5 #number of different source destination.
+num_anomaly=10 #number of anomaly in each link
 #standard_dev_base=np.array([0.007,0.03,0.04,0.05,0.09])
 
 def plotTimeSeries(time_series):
@@ -42,15 +43,17 @@ def simpleDataset(num_links,max_base_lim):
     plotTimeSeries(time_series)
 
             #Now as base signal is created we have to add noise to it
-    num_anomaly=3 #number of anomaly in each link
     #select random index from the total timestamp(where to insert anomaly).
+    start_offset=0
     offset=15000 #here ~3000 timepoints means one hour(our max anomaly will last 4 hour so for safety)
-    anomaly_pos=np.random.randint(offset,timestamps-offset,
+    anomaly_pos=np.random.randint(start_offset,timestamps-offset,
                                     size=(num_anomaly,num_links))
     #crete radom uniform minute of anomaly to be added.
     #(max four hour and min 30 min) 4hour=4*60=240 min.
-    min_minutes_index=(30)*60 #here 60 is to convet to index which is sampled each second
-    max_minutes_index=(4*60)*60
+    min_anomaly_min=5
+    max_anomaly_min=30
+    min_minutes_index=(min_anomaly_min)*60 #here 60 is to convet to index which is sampled each second
+    max_minutes_index=(max_anomaly_min)*60
     anomaly_min=np.random.randint(min_minutes_index,max_minutes_index,
                                         size=(num_anomaly,num_links))
     #create the new noise and add at the selected pos above.
@@ -100,7 +103,7 @@ def correlatedDataset(num_links,max_base_lim):
     # print(time_series.shape)
         #Now we have to add noise(anomaly) over this base signal
 
-    return time_series,index
+    return index,time_series
 
 def saveToCSV(num_links,index,time_series):
     '''Arguments:
@@ -112,8 +115,8 @@ def saveToCSV(num_links,index,time_series):
     for i in range(num_links):
         col.append('link'+str(i))
     df=pd.DataFrame(data=time_series,index=index,columns=col)
-    df.to_csv('./../Data/time_series.csv')
+    df.to_csv('./../Data/time_series3001.csv')
     #df.to_excel('./../Data/time_series.xlsx')
 
-time_series,intdex=simpleDataset(num_links,max_base_lim)
-#saveToCSV(num_links,index,time_series)
+index,time_series=simpleDataset(num_links,max_base_lim)
+saveToCSV(num_links,index,time_series)
