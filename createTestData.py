@@ -3,13 +3,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 np.random.seed(1) #for having consistency while debugging
 
+#CONTROL HYPER-PARAMETERS
 sampling_rate=1 #in Hz(times per second)
 start_date='2018-02-01T00:00:00'
 end_date='2018-02-08T00:00:00' #end of the 7thday
 max_base_lim=0.5 #the maximum normal packet loss(as used in paper)
 num_links=5 #number of different source destination.
 num_anomaly=10 #number of anomaly in each link
-#standard_dev_base=np.array([0.007,0.03,0.04,0.05,0.09])
+
+min_anomaly_min=5
+max_anomaly_min=30
 
 def plotTimeSeries(time_series):
     '''Arguments:
@@ -48,14 +51,13 @@ def simpleDataset(num_links,max_base_lim):
 
             #Now as base signal is created we have to add noise to it
     #select random index from the total timestamp(where to insert anomaly).
-    start_offset=0
-    offset=15000 #here ~3000 timepoints means one hour(our max anomaly will last 4 hour so for safety)
+    #all the time steps are in second and indexed that way. So a factor of 60 everywhere
+    start_offset=0*60
+    offset=60*max_anomaly_min+2#according to max_anomaly. So that we dont cross max index while adding anomaly
     anomaly_pos=np.random.randint(start_offset,timestamps-offset,
                                     size=(num_anomaly,num_links))
+
     #crete radom uniform minute of anomaly to be added.
-    #(max four hour and min 30 min) 4hour=4*60=240 min.
-    min_anomaly_min=5
-    max_anomaly_min=30
     min_minutes_index=(min_anomaly_min)*60 #here 60 is to convet to index which is sampled each second
     max_minutes_index=(max_anomaly_min)*60
     anomaly_min=np.random.randint(min_minutes_index,max_minutes_index,
@@ -122,7 +124,8 @@ def saveToCSV(num_links,metadata,index,time_series):
     for i in range(num_links):
         col.append('link'+str(i))
     df=pd.DataFrame(data=time_series,index=index,columns=col)
-    filename='./../Data/time_series3001_'+str(num_anomaly)
+    #Now save them in same folder. gitignore added
+    filename='time_series3001_'+str(num_anomaly)
     df.to_csv(filename+'.csv')
     np.savez(filename+'_metadata',**metadata)
     #df.to_excel('./../Data/time_series.xlsx')
