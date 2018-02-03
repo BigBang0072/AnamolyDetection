@@ -4,15 +4,17 @@ import pandas as pd
 np.random.seed(1) #for having consistency while debugging
 
 #CONTROL HYPER-PARAMETERS
-sampling_rate=1 #in Hz(times per second)
+#data creation parameters
+sampling_rate=1                     #in Hz(times per second)
 start_date='2018-02-01T00:00:00'
-end_date='2018-02-08T00:00:00' #end of the 7thday
-max_base_lim=0.5 #the maximum normal packet loss(as used in paper)
-num_links=5 #number of different source destination.
-num_anomaly=10 #number of anomaly in each link
+end_date='2018-02-08T00:00:00'      #end of the 7thday
+max_base_lim=0.55                   #the maximum normal packet loss(as used in paper)
+num_links=5                         #number of different source destination.
 
-min_anomaly_min=5
-max_anomaly_min=30
+#anomaly parameters
+num_anomaly=5           #number of anomaly in each link
+min_anomaly_min=1*60    #minimum respose time
+max_anomaly_min=4*60    #could be changed
 
 def plotTimeSeries(time_series):
     '''Arguments:
@@ -20,7 +22,7 @@ def plotTimeSeries(time_series):
     '''
     links=time_series.shape[1]
     for i in range(links):
-        plt.plot(time_series[:,i],label='link'+str(i))
+        plt.plot(time_series[:,i],label='link'+str(i),alpha=0.8)
         plt.xlabel('time stamps')
         plt.ylabel('Packet-Loss')
         plt.ylim(0,1)
@@ -35,8 +37,8 @@ def simpleDataset(num_links,max_base_lim):
                         noise will be added.
     '''
             #First generating the base signal. Later noise will be added with varying std and places
-    base_val=np.random.uniform(0.1,0.55,num_links);#Tunable
-    std_base=np.random.uniform(0.00325,0.02,num_links);#Tunable
+    base_val=np.random.uniform(0.15,max_base_lim,num_links); #Tunable
+    std_base=np.random.uniform(0.00325,0.0105,num_links);     #Tunable
     metadata={} #for storing the useful attributes of data generated for use elsewhere
     metadata['base_val']=base_val
     metadata['std_base']=std_base

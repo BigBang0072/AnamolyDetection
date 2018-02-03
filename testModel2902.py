@@ -3,46 +3,68 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from simpleFF3001 import *
+np.random.seed(1)
 
+#adding reuired paths for import or file handlings
 sys.path.append('/home/abhinav/Desktop/AnamolyDetection/AnamolyDetection/Models')
-time_series_path='/home/abhinav/Desktop/AnamolyDetection/Data/time_series3001_10'
+time_series_path='time_series3001_5'
 filename=time_series_path+'.csv'
 metadata_path=time_series_path+'_metadata.npz'
+
+#the link we are going to analyze
 link_num=3
-posterior_min=60
-anterior_min=30
+
+#the training input and output dimensions
+posterior_min=60    #well give in minutes always. if hour change here only
+anterior_min=30     #from here all the works will be converted into seconds index
 
 def createDataSet():
     df=pd.read_csv(filename)
     print('Printing Data Sample')
     print(df.head())
     df=df['link'+str(link_num)]
-    print('just taking out first links data:')
+    print('just taking out one of links data:')
     print(df.head())
-    #print(type(df))
 
     time_series=df.as_matrix()
     print("Converting the Series to Array")
     #print(type(time_series))
     print('Shape of time_series: ',time_series.shape)
 
-    posterior_len=60*posterior_min #giving us 1 hours of posterior packet loss to condition NN on
-    anterior_len=60*anterior_min #30 minutes anterior packet loss that net has to predict given the posterior
+    #Slicing the Time-series data of a particular link
+    posterior_len=60*posterior_min  #giving us of posterior packet loss to condition NN on
+    anterior_len=60*anterior_min    #anterior packet loss that net has to predict given the posterior
 
-    X=time_series.reshape(-1,posterior_len)
-    #print(X.shape)
-    ex_size=X.shape[0]
+    #total_pairs=time_series.shape[0]-(posterior_len+anterior_len)+1 #Memory Error
+    total_pairs=int((time_series.shape[0]-posterior_len)/anterior_len)
+    X=np.empty((total_pairs,posterior_len),dtype=np.float64)
+    Y=np.empty((total_pairs,anterior_len),dtype=np.float64)
 
-    Y=X[1:ex_size,0:anterior_len]#taking the first hour of every series for prediction of previous series
-    X=X[:ex_size-1,:] #dropping the last 8 hout data as it cant be used in training
-    print("Shape of X: ",X.shape)
-    print("Shape of Y: ",Y.shape)
+    chunk_len=posterior_len+anterior_len
+    for i in range(total_pairs):
+        fr=anterior_len*i               #from where to cut time-series
+        to=anterior_len*i+chunk_len     #to where based on current idea2
+        chunk=time_series[fr:to]
+        X[i,:]=chunk[0:posterior_len]
+        Y[i,:]=chunk[posterior_len:]
+    print("X_shape: ",X.shape)
+    print("Y_shape: ",Y.shape)
 
-    X_train=X[:125,:]
-    Y_train=Y[:125,:]
+    #Splitting the data in train and test split
+    perm=np.random.permutation(X.shape[0]) #for shuffling the data (GOOD)
+    X=X[perm,:]
+    Y=Y[perm,:]
+    train_split=int(X.shape[0]*0.75) #75 percent train split.
+    X_train=X[0:train_split]
+    Y_train=Y[0:train_split]
 
-    X_test=X[125:,:]
-    Y_test=Y[125:,:]
+    X_test=X[train_split:]
+    Y_test=Y[train_split:]
+
+    print("Training Input Shape  :",X_train.shape)
+    print("Training Output Shape :",Y_train.shape)
+    print("Testing Input Shape   :",X_test.shape)
+    print("Testing Output Shape  :",Y_test.shape)
 
     return X_train,Y_train,X_test,Y_test,time_series
 
@@ -77,12 +99,13 @@ def visualizeDataset(X_train,Y_train,X_test,Y_test):
 
 #createDataSet()
 X_train,Y_train,X_test,Y_test,time_series=createDataSet()
-#visualizeDataset(X_train,Y_train,X_test,Y_test)
+visualizeDataset(X_train,Y_train,X_test,Y_test)
 
 model=simpleFeedForward()
 model.compile(optimizer='adam',loss='mse')
 print(model.summary())
-train_history=model.fit(x=X_train,y=Y_train,epochs=15,validation_data=(X_test,Y_test))
+train_history=model.fit(x=X_train,y=Y_train,epochs=15,
+                            validation_data=(X_test,Y_test))
 prediction=model.predict(X_test) #should see how its doing on train data
 
 def plot_predictions(actual,pred):
@@ -111,53 +134,53 @@ def plot_training_losses(train_history):
 plot_training_losses(train_history)
 #plot_predictions(Y_test,prediction)
 
-def extractMetadata(metadata_path):
-    metadata=np.load(metadata_path)
-    anomaly_pos=metadata['anomaly_pos']
-    anomaly_min=metadata['anomaly_min']
-
-    return anomaly_pos,anomaly_min
-
-def plot_decision_boundary(link_num,time_series,input_time,output_time,model):
-    '''Arguments:
-        link_num    : for which we are plotting the analysis
-        time_seires : the full time-series of the particular link/or all depend on model
-        input_time  : the posterior for predicting the next time-step
-        output_time : the anteroir time_stamp being predicted given the posterior
-        model       : the trained model to make the prediction on
-    '''
-
-    anomaly_pos,anomaly_min=extractMetadata(metadata_path)
-    gt_anomaly_loc=np.zeros((time_series.shape[0])) #the ground truth where anomaly is located
-
-    for i in range(anomaly_pos.shape[0]):
-        pos=anomaly_pos[i,link_num]
-        to=anomaly_min[i,link_num]
-        gt_anomaly_loc[pos:pos+to]=0.9
-    plt.plot(gt_anomaly_loc[:],label='anomaly_ground_truth')
-
-    total_blocks=time_series.shape[0]/output_time    #total number of blocks of size input shape
-                                                    #also we would have to leave last block
-    #we cant access last block cuz then there will be no actiul value to compre with in output time
-    predictions=np.zeros((time_series.shape[0]))
-    print(total_blocks-2)#have to change here later
-    for i in range(int(total_blocks-2)):
-        posterior_data=time_series[i*output_time:i*output_time+input_time]
-        posterior_data=posterior_data.reshape(1,-1)
-        #print(posterior_data.shape)
-        anterior_pred=model.predict(posterior_data)
-        #will have to chage here later
-        predictions[(i+2)*output_time:(i+3)*output_time]=anterior_pred
-
-    plt.plot(predictions[:],label='predictions')
-    plt.plot(time_series[:],label='actual_loss',alpha=0.7) #the case when only one link is there.
-    plt.ylim(0,1)
-    plt.xlabel('time_steps')
-    plt.ylabel('packet_loss')
-    plt.legend()
-    plt.show()
-
-
-input_time=posterior_min*60
-output_time=anterior_min*60
-plot_decision_boundary(link_num,time_series,input_time,output_time,model)
+# def extractMetadata(metadata_path):
+#     metadata=np.load(metadata_path)
+#     anomaly_pos=metadata['anomaly_pos']
+#     anomaly_min=metadata['anomaly_min']
+#
+#     return anomaly_pos,anomaly_min
+#
+# def plot_decision_boundary(link_num,time_series,input_time,output_time,model):
+#     '''Arguments:
+#         link_num    : for which we are plotting the analysis
+#         time_seires : the full time-series of the particular link/or all depend on model
+#         input_time  : the posterior for predicting the next time-step
+#         output_time : the anteroir time_stamp being predicted given the posterior
+#         model       : the trained model to make the prediction on
+#     '''
+#
+#     anomaly_pos,anomaly_min=extractMetadata(metadata_path)
+#     gt_anomaly_loc=np.zeros((time_series.shape[0])) #the ground truth where anomaly is located
+#
+#     for i in range(anomaly_pos.shape[0]):
+#         pos=anomaly_pos[i,link_num]
+#         to=anomaly_min[i,link_num]
+#         gt_anomaly_loc[pos:pos+to]=0.9
+#     plt.plot(gt_anomaly_loc[:],label='anomaly_ground_truth')
+#
+#     total_blocks=time_series.shape[0]/output_time    #total number of blocks of size input shape
+#                                                     #also we would have to leave last block
+#     #we cant access last block cuz then there will be no actiul value to compre with in output time
+#     predictions=np.zeros((time_series.shape[0]))
+#     print(total_blocks-2)#have to change here later
+#     for i in range(int(total_blocks-2)):
+#         posterior_data=time_series[i*output_time:i*output_time+input_time]
+#         posterior_data=posterior_data.reshape(1,-1)
+#         #print(posterior_data.shape)
+#         anterior_pred=model.predict(posterior_data)
+#         #will have to chage here later
+#         predictions[(i+2)*output_time:(i+3)*output_time]=anterior_pred
+#
+#     plt.plot(predictions[:],label='predictions')
+#     plt.plot(time_series[:],label='actual_loss',alpha=0.7) #the case when only one link is there.
+#     plt.ylim(0,1)
+#     plt.xlabel('time_steps')
+#     plt.ylabel('packet_loss')
+#     plt.legend()
+#     plt.show()
+#
+#
+# input_time=posterior_min*60
+# output_time=anterior_min*60
+# plot_decision_boundary(link_num,time_series,input_time,output_time,model)
