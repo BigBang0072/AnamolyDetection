@@ -10,7 +10,7 @@ Also we could think of using GANs later.
 
 
 
-def accumulator_predict(model,time_series):
+def decide_accumulator(input_time,output_time,model,time_series):
     '''Arguments:
         model       : this will the keras model that we have trained data on.
                         it will be loaded from the saved weight and passed by
@@ -24,8 +24,8 @@ def accumulator_predict(model,time_series):
     shrink_val=3                        #for decrementing counter when no anomlay is there
     increment_val=1                     #for incrementing counter when anomaly is detected
     error_delta=0.05                    #Tunable
-    counter_threshold=3600              #to signal a sustained anomaly after 1 hour
-    counter_maximum=int(1.5*3600)       #large enough for holding sutained anomaly for upto 4 hour
+    counter_threshold=1000              #to signal a sustained anomaly after 1 hour
+    counter_maximum=int(1.5*counter_threshold)       #large enough for holding sutained anomaly for upto 4 hour
                                         #and small enough for easy decay after anomaly
 
 
@@ -40,12 +40,14 @@ def accumulator_predict(model,time_series):
     #so design counter keeping this is ming for them to be large
     #enough for detecting sustained anomaly not just small noise.
     accumulator_decision=np.zeros((time_series.shape[0]))
+    counter=0
     for i in range(threshold_decision.shape[0]):
         if(threshold_decision[i]==1):
             counter+=increment_val
         else:
             counter-=shrink_val
         #will have to decide what to do at peak. Read from paper.
+        if(counter)
         if(counter>=counter_threshold):
             accumulator_decision[i]=1
 
@@ -73,4 +75,4 @@ def predict_packet_loss(input_time,output_time,time_series,model):
         anterior_pred=model.predict(posterior_data)                 #predicting on the posterior data
         predictions[fr+input_time:to]=anterior_pred                 #just as elegently as iniitally in dataset creation
 
-    return prediction
+    return predictions

@@ -1,12 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from make_decision import *
 
-def plot_decision_boundary(link_num,time_series,input_time,output_time,model):
+def plot_decision_boundary(link_num,time_series,input_time,output_time,metadata_path,model):
     '''Arguments:
         link_num    : for which we are plotting the analysis
         time_seires : the full time-series of the particular link/or all depend on model
         input_time  : the posterior for predicting the next time-step
         output_time : the anteroir time_stamp being predicted given the posterior
+        metadata_path: to be used for getting the metadata created during data creation
         model       : the trained model to make the prediction on
     '''
 
@@ -16,12 +18,14 @@ def plot_decision_boundary(link_num,time_series,input_time,output_time,model):
     for i in range(anomaly_pos.shape[0]):
         pos=anomaly_pos[i,link_num]
         to=anomaly_min[i,link_num]
-        gt_anomaly_loc[pos:pos+to]=0.9
+        gt_anomaly_loc[pos:pos+to]=0.7
     plt.plot(gt_anomaly_loc[:],label='anomaly_ground_truth')
 
     #adding the PREDICTION of our model on whole data.
-    predictions=#take from the decision.py script
-    plt.plot(predictions[:],label='predictions')
+    pkt_loss_predictions,accumulator_decision=decide_accumulator(
+                                    input_time,output_time,model,time_series)#take from the decision.py script
+    plt.plot(pkt_loss_predictions[:],label='predictions')
+    plt.plot(accumulator_decision[:]*0.9,label='accumulator_decision')
 
     #Adding the ACTUAL TIME-SERIES overlay on the plot.
     plt.plot(time_series[:],label='actual_loss',alpha=0.7) #the case when only one link is there.
