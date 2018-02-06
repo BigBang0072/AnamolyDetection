@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from keras.models import load_model
 from simpleFF3001 import *
 from plot_decision import *
 from make_decision import *
@@ -107,19 +108,24 @@ X_train,Y_train,X_test,Y_test,time_series=createDataSet()
 
     ##################### MODEL CREATION ###########################
     ##################### Prediction Network #######################
-model=simpleFeedForward()
-model.compile(optimizer='adam',loss='mse')
-print(model.summary())
-train_history=model.fit(x=X_train,y=Y_train,epochs=50,
-                            validation_data=(X_test,Y_test))
-
-prediction=model.predict(X_test) #should see how its doing on train data
+# model=simpleFeedForward()
+# model.compile(optimizer='adam',loss='mse')
+# print(model.summary())
+# train_history=model.fit(x=X_train,y=Y_train,epochs=10,
+#                             validation_data=(X_test,Y_test))
+#prediction=model.predict(X_test) #should see how its doing on train data
+# model.save('shifted_anomaly_10_epoch.h5')
+    ################## Loading the model for furthur execution######(either this or above one will be commented)
+model=load_model('shifted_anomaly_100_epoch.h5')
+# train_history=model.fit(x=X_train,y=Y_train,epochs=50,
+#                             validation_data=(X_test,Y_test))
+# model.save('shifted_anomaly_300_epoch.h5')
 
 
     ################## TRAINING VISUALIZATION ######################
 input_time=posterior_min*60
 output_time=anterior_min*60
 
-plot_training_losses(train_history)
+#plot_training_losses(train_history)
 #plot_predictions(Y_test,prediction)
 plot_decision_boundary(link_num,time_series,input_time,output_time,metadata_path,model)
