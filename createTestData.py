@@ -38,7 +38,9 @@ def simpleDataset(num_links,max_base_lim):
     '''
             #First generating the base signal. Later noise will be added with varying std and places
     base_val=np.random.uniform(0.15,max_base_lim,num_links); #Tunable
-    std_base=np.random.uniform(0.00325,0.0105,num_links);     #Tunable
+    std_base=np.random.uniform(0.00325,0.0105,num_links);     #Tunable(for standard deviation approach,normal deviation around data)
+    anomaly_base=np.random.uniform(max_base_lim/8,
+                                    max_base_lim/2,(num_links,num_anomaly)) #Tunable for adding noise just by shifting above ceratain val up.
     metadata={} #for storing the useful attributes of data generated for use elsewhere
     metadata['base_val']=base_val
     metadata['std_base']=std_base
@@ -74,8 +76,9 @@ def simpleDataset(num_links,max_base_lim):
             std_val=np.random.randint(2,6) # a random "scalar" bw 2 to 5
             pos=anomaly_pos[j,i]
             to=anomaly_min[j,i]
-            time_series[pos:pos+to,i]=np.random.normal(base_val[i],
-                                        std_val*std_base[i],size=(to,)) #OK (to,) snapped
+            #time_series[pos:pos+to,i]=np.random.normal(base_val[i],
+                                        #std_val*std_base[i],size=(to,)) #OK (to,) snapped
+            time_series[pos:pos+to,i]=anomaly_base[i,j]+time_series[pos:pos+to,i]
     plotTimeSeries(time_series)
     return metadata,index,time_series
 
