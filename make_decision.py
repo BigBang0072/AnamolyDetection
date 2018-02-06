@@ -24,8 +24,8 @@ def decide_accumulator(input_time,output_time,model,time_series):
     '''
     shrink_val=1                        #for decrementing counter when no anomlay is there
     increment_val=1                     #for incrementing counter when anomaly is detected
-    error_delta=0.06                   #Tunable
-    counter_threshold=50              #to signal a sustained anomaly after 1 hour
+    error_delta=0.0105                   #Tunable
+    counter_threshold=1000              #to signal a sustained anomaly after 1 hour
     counter_maximum=int(1.5*counter_threshold)       #large enough for holding sutained anomaly for upto 4 hour
                                         #and small enough for easy decay after anomaly
 

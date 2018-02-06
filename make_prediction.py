@@ -15,7 +15,7 @@ filename=time_series_path+'.csv'
 metadata_path=time_series_path+'_metadata.npz'
 
 #the link we are going to analyze
-link_num=0
+link_num=4
 
 #the training input and output dimensions
 posterior_min=60    #well give in minutes always. if hour change here only
@@ -113,13 +113,13 @@ X_train,Y_train,X_test,Y_test,time_series=createDataSet()
 # print(model.summary())
 # train_history=model.fit(x=X_train,y=Y_train,epochs=10,
 #                             validation_data=(X_test,Y_test))
-#prediction=model.predict(X_test) #should see how its doing on train data
-# model.save('shifted_anomaly_10_epoch.h5')
+# #prediction=model.predict(X_test) #should see how its doing on train data
+# model.save('gaussian_anomaly_10_epoch.h5')
     ################## Loading the model for furthur execution######(either this or above one will be commented)
-model=load_model('shifted_anomaly_100_epoch.h5')
-# train_history=model.fit(x=X_train,y=Y_train,epochs=50,
+model=load_model('gaussian_anomaly_50_epoch.h5')
+# train_history=model.fit(x=X_train,y=Y_train,epochs=40,
 #                             validation_data=(X_test,Y_test))
-# model.save('shifted_anomaly_300_epoch.h5')
+# model.save('gaussian_anomaly_50_epoch.h5')
 
 
     ################## TRAINING VISUALIZATION ######################

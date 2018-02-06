@@ -76,9 +76,9 @@ def simpleDataset(num_links,max_base_lim):
             std_val=np.random.randint(2,6) # a random "scalar" bw 2 to 5
             pos=anomaly_pos[j,i]
             to=anomaly_min[j,i]
-            #time_series[pos:pos+to,i]=np.random.normal(base_val[i],
-                                        #std_val*std_base[i],size=(to,)) #OK (to,) snapped
-            time_series[pos:pos+to,i]=anomaly_base[i,j]+time_series[pos:pos+to,i]
+            time_series[pos:pos+to,i]=np.random.normal(base_val[i],
+                                        std_val*std_base[i],size=(to,)) #OK (to,) snapped
+            #time_series[pos:pos+to,i]=anomaly_base[i,j]+time_series[pos:pos+to,i]
     plotTimeSeries(time_series)
     return metadata,index,time_series
 
